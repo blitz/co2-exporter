@@ -5,11 +5,7 @@ mod co2_linux_reader;
 mod co2_parse;
 
 use anyhow::{Context, Result};
-use rocket::{
-    response::{content, status},
-    tokio::sync::Mutex,
-    State,
-};
+use rocket::{tokio::sync::Mutex, State};
 use std::{sync::Arc, thread};
 
 use co2_parse::Message;
@@ -69,7 +65,7 @@ async fn main() -> Result<()> {
         .context("Failed to open CO2 monitor. Is it connected?")?;
 
     let reader_metrics = metrics.clone();
-    let reader_thread = thread::spawn(move || -> Result<()> {
+    let _reader_thread = thread::spawn(move || -> Result<()> {
         loop {
             let buf = reader
                 .read()
@@ -77,7 +73,7 @@ async fn main() -> Result<()> {
 
             match Message::try_from(&buf) {
                 Ok(m) => reader_metrics.update(m),
-                Err(e) => (),
+                Err(_e) => (),
             }
         }
     });
@@ -89,6 +85,8 @@ async fn main() -> Result<()> {
         .await?
         .launch()
         .await?;
+
+    // TODO We should exit the reader thread here.
 
     Ok(())
 }
