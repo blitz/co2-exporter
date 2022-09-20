@@ -1,5 +1,5 @@
 {
-  description = "Build a cargo project";
+  description = "CO2 monitor data exporter";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
@@ -40,14 +40,14 @@
 
         # Build the actual crate itself, reusing the dependency
         # artifacts from above.
-        my-crate = craneLib.buildPackage {
+        co2-exporter = craneLib.buildPackage {
           inherit cargoArtifacts src nativeBuildInputs buildInputs;
         };
       in
         {
           checks = {
             # Build the crate as part of `nix flake check` for convenience
-            inherit my-crate;
+            inherit co2-exporter;
 
             # Run clippy (and deny all warnings) on the crate source,
             # again, resuing the dependency artifacts from above.
@@ -55,30 +55,30 @@
             # Note that this is done as a separate derivation so that
             # we can block the CI if there are issues here, but not
             # prevent downstream consumers from building our crate by itself.
-            my-crate-clippy = craneLib.cargoClippy {
+            co2-exporter-clippy = craneLib.cargoClippy {
               inherit cargoArtifacts src nativeBuildInputs buildInputs;
               cargoClippyExtraArgs = "--all-targets -- --deny warnings";
             };
 
-            my-crate-doc = craneLib.cargoDoc {
+            co2-exporter-doc = craneLib.cargoDoc {
               inherit cargoArtifacts src nativeBuildInputs buildInputs;
             };
 
             # Check formatting
-            my-crate-fmt = craneLib.cargoFmt {
+            co2-exporter-fmt = craneLib.cargoFmt {
               inherit src;
             };
 
             # Audit dependencies
-            my-crate-audit = craneLib.cargoAudit {
+            co2-exporter-audit = craneLib.cargoAudit {
               inherit src advisory-db;
             };
           };
 
-          packages.default = my-crate;
+          packages.default = co2-exporter;
 
           apps.default = flake-utils.lib.mkApp {
-            drv = my-crate;
+            drv = co2-exporter;
           };
 
           devShells.default = pkgs.mkShell {
